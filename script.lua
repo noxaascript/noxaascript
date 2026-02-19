@@ -1,7 +1,8 @@
- --[[
+--[[
     NOXA ULTIMATE HUB - 99 Nights + Plants vs Brainrots
     Created for: zamxs
     Website: noxakeyhubb.infinityfreeapp.com
+    Drag System: ZYLNX-style (smooth & responsive)
 ]]
 
 -- Load Library
@@ -10,59 +11,59 @@ local Window = Library.CreateLib("NOXA ULTIMATE HUB - zamxs", "DarkTheme")
 
 wait(1.5)
 
--- ================= DRAG SYSTEM FINAL =================
+-- ================= DRAG SYSTEM (ZYLNX STYLE) =================
 local UIS = game:GetService("UserInputService")
-local TweenService = game:GetService("TweenService")
+local RunService = game:GetService("RunService")
 local guiMain = Window.MainFrame
 
 if guiMain then
-    -- Hapus drag area lama
+    -- Hapus drag area lama jika ada
     for _, v in pairs(guiMain:GetChildren()) do
         if v.Name == "DragArea" then
             v:Destroy()
         end
     end
-    
-    -- Buat drag area di DALAM GUI
-    local dragArea = Instance.new("Frame")
-    dragArea.Name = "DragArea"
-    dragArea.Size = UDim2.new(1, 0, 0, 35)
-    dragArea.Position = UDim2.new(0, 0, 0, 0)
-    dragArea.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    dragArea.BorderSizePixel = 0
-    dragArea.ZIndex = 9999
-    dragArea.Active = true
-    dragArea.Parent = guiMain
-    
-    -- Geser semua konten ke bawah
+
+    -- Buat title bar baru (sebagai drag area)
+    local titleBar = Instance.new("Frame")
+    titleBar.Name = "DragArea"
+    titleBar.Size = UDim2.new(1, 0, 0, 35)
+    titleBar.Position = UDim2.new(0, 0, 0, 0)  -- di dalam GUI, di atas
+    titleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+    titleBar.BorderSizePixel = 0
+    titleBar.ZIndex = 9999
+    titleBar.Active = true
+    titleBar.Parent = guiMain
+
+    -- Geser semua konten ke bawah (agar tidak ketimpa title bar)
     for _, v in pairs(guiMain:GetChildren()) do
         if v:IsA("Frame") and v.Name ~= "DragArea" then
             v.Position = UDim2.new(0, 0, 0, 35)
         end
     end
-    
-    -- Garis merah
+
+    -- Garis merah pembatas
     local line = Instance.new("Frame")
     line.Size = UDim2.new(1, 0, 0, 3)
     line.Position = UDim2.new(0, 0, 1, 0)
     line.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
     line.BorderSizePixel = 0
     line.ZIndex = 9999
-    line.Parent = dragArea
-    
+    line.Parent = titleBar
+
     -- Label
     local dragLabel = Instance.new("TextLabel")
-    dragLabel.Size = UDim2.new(0, 150, 1, 0)
+    dragLabel.Size = UDim2.new(0, 200, 1, 0)
     dragLabel.Position = UDim2.new(0, 10, 0, 0)
     dragLabel.BackgroundTransparency = 1
     dragLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-    dragLabel.Text = "NOXA HUB (drag here)"
+    dragLabel.Text = "NOXA HUB (Drag Here)"
     dragLabel.Font = Enum.Font.GothamBold
     dragLabel.TextSize = 14
     dragLabel.TextXAlignment = Enum.TextXAlignment.Left
     dragLabel.ZIndex = 9999
-    dragLabel.Parent = dragArea
-    
+    dragLabel.Parent = titleBar
+
     -- Minimize Button
     local minBtn = Instance.new("TextButton")
     minBtn.Size = UDim2.new(0, 30, 0, 25)
@@ -74,49 +75,42 @@ if guiMain then
     minBtn.TextSize = 20
     minBtn.BorderSizePixel = 0
     minBtn.ZIndex = 9999
-    minBtn.Parent = dragArea
-    
-    -- Drag system
+    minBtn.Parent = titleBar
+
+    -- Variabel drag
     local dragging = false
-    local dragStart, startPos
-    
-    dragArea.InputBegan:Connect(function(input)
+    local dragOffset = Vector2.new(0, 0)
+    local mouse = game.Players.LocalPlayer:GetMouse()
+
+    titleBar.InputBegan:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
-            dragStart = input.Position
-            startPos = guiMain.Position
+            dragOffset = Vector2.new(mouse.X, mouse.Y) - Vector2.new(guiMain.AbsolutePosition.X, guiMain.AbsolutePosition.Y)
         end
     end)
-    
-    dragArea.InputEnded:Connect(function(input)
+
+    titleBar.InputEnded:Connect(function(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = false
         end
     end)
-    
-    UIS.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            guiMain.Position = UDim2.new(
-                startPos.X.Scale,
-                startPos.X.Offset + delta.X,
-                startPos.Y.Scale,
-                startPos.Y.Offset + delta.Y
-            )
+
+    RunService.RenderStepped:Connect(function()
+        if dragging then
+            local newPos = Vector2.new(mouse.X, mouse.Y) - dragOffset
+            guiMain.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
         end
     end)
-    
+
     -- Minimize system
     local minimized = false
     local originalSize = guiMain.Size
-    
+
     minBtn.MouseButton1Click:Connect(function()
         minimized = not minimized
         if minimized then
-            if originalSize == guiMain.Size then
-                originalSize = guiMain.Size
-            end
-            guiMain:TweenSize(UDim2.new(0, 250, 0, 35), "Out", "Quad", 0.3, true)
+            originalSize = guiMain.Size
+            guiMain.Size = UDim2.new(0, 250, 0, 35)
             for _, v in pairs(guiMain:GetChildren()) do
                 if v:IsA("Frame") and v.Name ~= "DragArea" then
                     v.Visible = false
@@ -125,27 +119,25 @@ if guiMain then
             minBtn.Text = "[]"
             dragLabel.Text = "NOXA [MIN]"
         else
-            guiMain:TweenSize(originalSize, "Out", "Quad", 0.3, true)
+            guiMain.Size = originalSize
             for _, v in pairs(guiMain:GetChildren()) do
                 if v:IsA("Frame") and v.Name ~= "DragArea" then
                     v.Visible = true
                 end
             end
             minBtn.Text = "-"
-            dragLabel.Text = "NOXA HUB (drag here)"
+            dragLabel.Text = "NOXA HUB (Drag Here)"
         end
     end)
 end
 
--- ================= KEY SYSTEM =================
+-- ================= KEY SYSTEM (FIXED) =================
 local KeySystem = Window:NewTab("ACTIVATION")
 local KeySection = KeySystem:NewSection("KEY VALIDATION")
 
-KeySection:NewLabel("━━━━━━━━━━━━━━━━━━━━━━")
 KeySection:NewLabel("HOW TO GET KEY:")
 KeySection:NewLabel("1. Click 'GET 99N' or 'GET BR' below")
 KeySection:NewLabel("2. Or visit: noxakeyhubb.infinityfreeapp.com")
-KeySection:NewLabel("━━━━━━━━━━━━━━━━━━━━━━")
 KeySection:NewLabel("")
 KeySection:NewLabel("ENTER YOUR KEY:")
 
@@ -162,7 +154,7 @@ KeySection:NewButton("GET KEY - 99 NIGHTS", function()
         KeyInput.Text = key
         Library:Notify("Key obtained (expires in 5 min)")
     else
-        Library:Notify("Failed to get key")
+        Library:Notify("Failed to get key - Server error")
     end
 end)
 
@@ -174,11 +166,11 @@ KeySection:NewButton("GET KEY - BRAINROTS", function()
         KeyInput.Text = key
         Library:Notify("Key obtained (expires in 5 min)")
     else
-        Library:Notify("Failed to get key")
+        Library:Notify("Failed to get key - Server error")
     end
 end)
 
--- Detect game from key
+-- Deteksi game dari key
 local function detectGameFromKey(key)
     if string.find(key, "99N") then
         return 1, "99 Nights"
@@ -196,21 +188,21 @@ KeySection:NewButton("VERIFY KEY", function()
         KeyStatus:Set("Status: KEY EMPTY")
         return
     end
-    
+
     KeyStatus:Set("Status: VERIFYING...")
-    
+
     local gameParam, gameName = detectGameFromKey(key)
-    
+
     if not gameParam then
         KeyStatus:Set("Status: INVALID FORMAT")
         Library:Notify("Key must contain 99N or BR")
         return
     end
-    
+
     local success, response = pcall(function()
         return game:HttpGet("http://noxakeyhubb.infinityfreeapp.com/verify.php?key=" .. key .. "&game=" .. gameParam)
     end)
-    
+
     if success and response == "VALID" then
         KeyValid = true
         KeyStatus:Set("Status: KEY VALID (" .. gameName .. ")")
@@ -220,7 +212,7 @@ KeySection:NewButton("VERIFY KEY", function()
         Library:Notify("KEY INVALID or EXPIRED")
     else
         KeyStatus:Set("Status: VERIFY FAILED")
-        Library:Notify("Connection failed")
+        Library:Notify("Connection failed - Check server")
     end
 end)
 
@@ -291,13 +283,9 @@ inf:NewLabel("OWNER: zamxs")
 inf:NewLabel("PHONE: +6282117450684")
 inf:NewLabel("DATE: 23/12/2025")
 inf:NewLabel("━━━━━━━━━━━━━━━━━━")
-inf:NewLabel("Drag Area inside GUI")
-inf:NewLabel("GET KEY buttons (2 games)")
-inf:NewLabel("Auto Detect Key")
-inf:NewLabel("Full scroll")
 inf:NewButton("COPY WEBSITE", function() 
     setclipboard("noxakeyhubb.infinityfreeapp.com") 
     Library:Notify("Website link copied") 
 end)
 
-Library:Notify("NOXA HUB LOADED - Drag gray bar at top")
+Library:Notify("NOXA HUB LOADED - Drag the gray bar at top")
