@@ -2,7 +2,7 @@
     NOXA ULTIMATE HUB - 99 Nights + Plants vs Brainrots
     Created for: zamxs
     Website: noxakeyhubb.infinityfreeapp.com
-    Drag System: ZYLNX-style (smooth & responsive)
+    Drag System: FIXED (PC + Mobile)
 ]]
 
 -- Load Library
@@ -11,127 +11,131 @@ local Window = Library.CreateLib("NOXA ULTIMATE HUB - zamxs", "DarkTheme")
 
 wait(1.5)
 
--- ================= DRAG SYSTEM (ZYLNX STYLE) =================
+-- ================= DRAG SYSTEM (FIXED, PC + MOBILE) =================
 local UIS = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
-local guiMain = Window.MainFrame
 
-if guiMain then
-    -- Hapus drag area lama jika ada
-    for _, v in pairs(guiMain:GetChildren()) do
-        if v.Name == "DragArea" then
-            v:Destroy()
-        end
+-- PENTING: drag PARENT, bukan MainFrame
+local guiMain = Window.MainFrame.Parent
+
+-- Hapus drag lama kalau ada
+for _, v in pairs(Window.MainFrame:GetChildren()) do
+    if v.Name == "DragArea" then
+        v:Destroy()
     end
-
-    -- Buat title bar baru (sebagai drag area)
-    local titleBar = Instance.new("Frame")
-    titleBar.Name = "DragArea"
-    titleBar.Size = UDim2.new(1, 0, 0, 35)
-    titleBar.Position = UDim2.new(0, 0, 0, 0)  -- di dalam GUI, di atas
-    titleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-    titleBar.BorderSizePixel = 0
-    titleBar.ZIndex = 9999
-    titleBar.Active = true
-    titleBar.Parent = guiMain
-
-    -- Geser semua konten ke bawah (agar tidak ketimpa title bar)
-    for _, v in pairs(guiMain:GetChildren()) do
-        if v:IsA("Frame") and v.Name ~= "DragArea" then
-            v.Position = UDim2.new(0, 0, 0, 35)
-        end
-    end
-
-    -- Garis merah pembatas
-    local line = Instance.new("Frame")
-    line.Size = UDim2.new(1, 0, 0, 3)
-    line.Position = UDim2.new(0, 0, 1, 0)
-    line.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
-    line.BorderSizePixel = 0
-    line.ZIndex = 9999
-    line.Parent = titleBar
-
-    -- Label
-    local dragLabel = Instance.new("TextLabel")
-    dragLabel.Size = UDim2.new(0, 200, 1, 0)
-    dragLabel.Position = UDim2.new(0, 10, 0, 0)
-    dragLabel.BackgroundTransparency = 1
-    dragLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
-    dragLabel.Text = "NOXA HUB (Drag Here)"
-    dragLabel.Font = Enum.Font.GothamBold
-    dragLabel.TextSize = 14
-    dragLabel.TextXAlignment = Enum.TextXAlignment.Left
-    dragLabel.ZIndex = 9999
-    dragLabel.Parent = titleBar
-
-    -- Minimize Button
-    local minBtn = Instance.new("TextButton")
-    minBtn.Size = UDim2.new(0, 30, 0, 25)
-    minBtn.Position = UDim2.new(1, -35, 0, 5)
-    minBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-    minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
-    minBtn.Text = "-"
-    minBtn.Font = Enum.Font.GothamBold
-    minBtn.TextSize = 20
-    minBtn.BorderSizePixel = 0
-    minBtn.ZIndex = 9999
-    minBtn.Parent = titleBar
-
-    -- Variabel drag
-    local dragging = false
-    local dragOffset = Vector2.new(0, 0)
-    local mouse = game.Players.LocalPlayer:GetMouse()
-
-    titleBar.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = true
-            dragOffset = Vector2.new(mouse.X, mouse.Y) - Vector2.new(guiMain.AbsolutePosition.X, guiMain.AbsolutePosition.Y)
-        end
-    end)
-
-    titleBar.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
-            dragging = false
-        end
-    end)
-
-    RunService.RenderStepped:Connect(function()
-        if dragging then
-            local newPos = Vector2.new(mouse.X, mouse.Y) - dragOffset
-            guiMain.Position = UDim2.new(0, newPos.X, 0, newPos.Y)
-        end
-    end)
-
-    -- Minimize system
-    local minimized = false
-    local originalSize = guiMain.Size
-
-    minBtn.MouseButton1Click:Connect(function()
-        minimized = not minimized
-        if minimized then
-            originalSize = guiMain.Size
-            guiMain.Size = UDim2.new(0, 250, 0, 35)
-            for _, v in pairs(guiMain:GetChildren()) do
-                if v:IsA("Frame") and v.Name ~= "DragArea" then
-                    v.Visible = false
-                end
-            end
-            minBtn.Text = "[]"
-            dragLabel.Text = "NOXA [MIN]"
-        else
-            guiMain.Size = originalSize
-            for _, v in pairs(guiMain:GetChildren()) do
-                if v:IsA("Frame") and v.Name ~= "DragArea" then
-                    v.Visible = true
-                end
-            end
-            minBtn.Text = "-"
-            dragLabel.Text = "NOXA HUB (Drag Here)"
-        end
-    end)
 end
 
--- ================= KEY SYSTEM (FIXED) =================
+local dragging = false
+local dragStart, startPos
+
+-- Title bar
+local titleBar = Instance.new("Frame")
+titleBar.Name = "DragArea"
+titleBar.Size = UDim2.new(1, 0, 0, 36)
+titleBar.Position = UDim2.new(0, 0, 0, 0)
+titleBar.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+titleBar.BorderSizePixel = 0
+titleBar.Active = true
+titleBar.ZIndex = 1000
+titleBar.Parent = Window.MainFrame
+
+-- Label
+local dragLabel = Instance.new("TextLabel")
+dragLabel.Size = UDim2.new(1, -40, 1, 0)
+dragLabel.Position = UDim2.new(0, 10, 0, 0)
+dragLabel.BackgroundTransparency = 1
+dragLabel.Text = "NOXA HUB (DRAG HERE)"
+dragLabel.Font = Enum.Font.GothamBold
+dragLabel.TextSize = 14
+dragLabel.TextColor3 = Color3.fromRGB(255, 100, 100)
+dragLabel.TextXAlignment = Enum.TextXAlignment.Left
+dragLabel.ZIndex = 1001
+dragLabel.Parent = titleBar
+
+-- Minimize Button (tetap ada)
+local minBtn = Instance.new("TextButton")
+minBtn.Size = UDim2.new(0, 30, 0, 25)
+minBtn.Position = UDim2.new(1, -35, 0, 5)
+minBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+minBtn.Text = "-"
+minBtn.Font = Enum.Font.GothamBold
+minBtn.TextSize = 20
+minBtn.BorderSizePixel = 0
+minBtn.ZIndex = 1001
+minBtn.Parent = titleBar
+
+-- Drag logic
+local function update(input)
+    local delta = input.Position - dragStart
+    guiMain.Position = UDim2.new(
+        startPos.X.Scale,
+        startPos.X.Offset + delta.X,
+        startPos.Y.Scale,
+        startPos.Y.Offset + delta.Y
+    )
+end
+
+titleBar.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = guiMain.Position
+    end
+end)
+
+UIS.InputChanged:Connect(function(input)
+    if dragging and (
+        input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch
+    ) then
+        update(input)
+    end
+end)
+
+UIS.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+    or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+-- Minimize system (AMAN)
+local minimized = false
+local originalSize = Window.MainFrame.Size
+
+minBtn.MouseButton1Click:Connect(function()
+    minimized = not minimized
+    if minimized then
+        originalSize = Window.MainFrame.Size
+        Window.MainFrame.Size = UDim2.new(0, 250, 0, 36)
+        for _, v in pairs(Window.MainFrame:GetChildren()) do
+            if v:IsA("Frame") and v.Name ~= "DragArea" then
+                v.Visible = false
+            end
+        end
+        minBtn.Text = "[]"
+        dragLabel.Text = "NOXA [MIN]"
+    else
+        Window.MainFrame.Size = originalSize
+        for _, v in pairs(Window.MainFrame:GetChildren()) do
+            if v:IsA("Frame") and v.Name ~= "DragArea" then
+                v.Visible = true
+            end
+        end
+        minBtn.Text = "-"
+        dragLabel.Text = "NOXA HUB (DRAG HERE)"
+    end
+end)
+
+-- Geser semua konten ke bawah (35px)
+for _, v in pairs(Window.MainFrame:GetChildren()) do
+    if v:IsA("Frame") and v.Name ~= "DragArea" then
+        v.Position = UDim2.new(0, 0, 0, 36)
+    end
+end
+
+-- ================= KEY SYSTEM (AUTO-DETECT) =================
 local KeySystem = Window:NewTab("ACTIVATION")
 local KeySection = KeySystem:NewSection("KEY VALIDATION")
 
