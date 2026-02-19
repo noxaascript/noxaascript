@@ -2,7 +2,6 @@
     NOXA ULTIMATE HUB - 99 Nights + Plants vs Brainrots
     Created for: zamxs
     Website: noxakeyhubb.infinityfreeapp.com
-    Fitur: Auto Detect Key (No Dropdown)
 ]]
 
 -- Load Library
@@ -11,7 +10,7 @@ local Window = Library.CreateLib("NOXA ULTIMATE HUB - zamxs", "DarkTheme")
 
 wait(1.5)
 
--- ================= DRAG SYSTEM (FINAL FIX) =================
+-- ================= DRAG SYSTEM PALING BRUTAL =================
 local UIS = game:GetService("UserInputService")
 local TweenService = game:GetService("TweenService")
 local guiMain = Window.MainFrame
@@ -19,23 +18,31 @@ local guiMain = Window.MainFrame
 if guiMain then
     -- Hapus drag area lama
     for _, v in pairs(guiMain:GetChildren()) do
-        if v.Name == "DragArea" then
+        if v.Name == "DragArea" or v.Name == "TitleBar" then
             v:Destroy()
         end
     end
     
-    -- Drag area baru (PASTI KELIATAN)
+    -- Buat DRAG AREA di DALAM GUI (bukan di atas)
+    -- Ini triknya: bikin frame di bagian ATAS DALAM GUI
     local dragArea = Instance.new("Frame")
     dragArea.Name = "DragArea"
-    dragArea.Size = UDim2.new(1, 0, 0, 35)
-    dragArea.Position = UDim2.new(0, 0, 0, -35)
-    dragArea.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    dragArea.Size = UDim2.new(1, 0, 0, 30)
+    dragArea.Position = UDim2.new(0, 0, 0, 0) -- Langsung di bagian atas GUI
+    dragArea.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
     dragArea.BorderSizePixel = 0
     dragArea.ZIndex = 9999
     dragArea.Active = true
     dragArea.Parent = guiMain
     
-    -- Garis merah pembatas
+    -- Geser semua konten GUI ke bawah (biar gak ketimpa drag area)
+    for _, v in pairs(guiMain:GetChildren()) do
+        if v:IsA("Frame") and v.Name ~= "DragArea" then
+            v.Position = v.Position + UDim2.new(0, 0, 0, 30)
+        end
+    end
+    
+    -- Garis merah biar keliatan
     local line = Instance.new("Frame")
     line.Size = UDim2.new(1, 0, 0, 3)
     line.Position = UDim2.new(0, 0, 1, 0)
@@ -60,7 +67,7 @@ if guiMain then
     -- Minimize Button
     local minBtn = Instance.new("TextButton")
     minBtn.Size = UDim2.new(0, 30, 0, 25)
-    minBtn.Position = UDim2.new(1, -35, 0, 5)
+    minBtn.Position = UDim2.new(1, -35, 0, 2.5)
     minBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     minBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
     minBtn.Text = "-"
@@ -110,7 +117,7 @@ if guiMain then
             if originalSize == guiMain.Size then
                 originalSize = guiMain.Size
             end
-            guiMain:TweenSize(UDim2.new(0, 220, 0, 35), "Out", "Quad", 0.3, true)
+            guiMain:TweenSize(UDim2.new(0, 220, 0, 30), "Out", "Quad", 0.3, true)
             for _, v in pairs(guiMain:GetChildren()) do
                 if v:IsA("Frame") and v.Name ~= "DragArea" then
                     v.Visible = false
@@ -131,7 +138,7 @@ if guiMain then
     end)
 end
 
--- ================= KEY SYSTEM - AUTO DETECT GAME =================
+-- ================= KEY SYSTEM =================
 local KeySystem = Window:NewTab("ACTIVATION")
 local KeySection = KeySystem:NewSection("KEY VALIDATION")
 
@@ -146,25 +153,6 @@ KeySection:NewLabel("ENTER YOUR KEY:")
 local KeyInput = KeySection:NewTextBox("Enter Key", "NOXA-99N-XXXX-12345-XXXXX", function(v) end)
 local KeyStatus = KeySection:NewLabel("Status: NOT ACTIVE")
 local KeyValid = false
-local DetectedGame = ""
-
--- Fungsi auto detect game dari format key
-local function detectGameFromKey(key)
-    if string.find(key, "99N") then
-        return 1, "99 Nights"
-    elseif string.find(key, "BR") then
-        return 2, "Brainrots"
-    else
-        return nil, "Unknown"
-    end
-end
-
--- Tombol GET KEY (otomatis pilih game sesuai dropdown sebelumnya, tapi kita kasih pilihan manual di sini)
-KeySection:NewButton("⚡ GET KEY (5 MIN)", function()
-    -- Tampilkan pilihan game sederhana pake Notify (karena dropdown dihapus)
-    Library:Notify("Choose game: Click again for 99 Nights, or use website")
-    -- Solusi sederhana: minta user pilih lewat website atau kita buat dua tombol terpisah
-end)
 
 -- Tombol GET KEY untuk 99 Nights
 KeySection:NewButton("🌲 GET KEY - 99 NIGHTS", function()
@@ -192,7 +180,18 @@ KeySection:NewButton("🧠 GET KEY - BRAINROTS", function()
     end
 end)
 
--- Tombol VERIFY (otomatis deteksi game)
+-- Fungsi auto detect game dari key
+local function detectGameFromKey(key)
+    if string.find(key, "99N") then
+        return 1, "99 Nights"
+    elseif string.find(key, "BR") then
+        return 2, "Brainrots"
+    else
+        return nil, "Unknown"
+    end
+end
+
+-- Tombol VERIFY
 KeySection:NewButton("✓ VERIFY KEY", function()
     local key = KeyInput.Text
     if key == "" then
@@ -202,12 +201,11 @@ KeySection:NewButton("✓ VERIFY KEY", function()
     
     KeyStatus:Set("Status: VERIFYING...")
     
-    -- Auto detect game dari key
     local gameParam, gameName = detectGameFromKey(key)
     
     if not gameParam then
         KeyStatus:Set("Status: INVALID FORMAT")
-        Library:Notify("Key format invalid - Must contain 99N or BR")
+        Library:Notify("Key must contain 99N or BR")
         return
     end
     
@@ -295,12 +293,12 @@ inf:NewLabel("OWNER: zamxs")
 inf:NewLabel("PHONE: +6282117450684")
 inf:NewLabel("DATE: 23/12/2025")
 inf:NewLabel("━━━━━━━━━━━━━━━━━━")
-inf:NewLabel("Drag & Minimize FIXED")
+inf:NewLabel("Drag Area DI DALAM GUI")
 inf:NewLabel("5-min Key System")
-inf:NewLabel("Auto Detect Game from Key")
+inf:NewLabel("Auto Detect Game")
 inf:NewButton("COPY WEBSITE", function() 
     setclipboard("noxakeyhubb.infinityfreeapp.com") 
     Library:Notify("Website link copied") 
 end)
 
-Library:Notify("NOXA HUB LOADED - Drag the RED line above")
+Library:Notify("🔥 NOXA HUB LOADED - Drag the TOP bar (abu-abu)")
